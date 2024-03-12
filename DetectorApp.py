@@ -48,6 +48,10 @@ class ExcimerDetectorApp(ttk.Window):
         connectionFrame.grid(row=0, column=0, padx=framePadding, pady=framePadding)
 
         serial_ports = self.serial_ports()
+        if len(serial_ports) == 0:
+            self.print('No serial devices detected')
+            self.on_closing()
+
         self.comCombobox = ttk.Combobox(connectionFrame, value=serial_ports, state='readonly', bootstyle='primary', **text_opts)
         self.comCombobox.current(0)
         self.comCombobox.bind('<<ComboboxSelected>>', self.serial_connect)
@@ -105,14 +109,14 @@ class ExcimerDetectorApp(ttk.Window):
             self.status_values[variable] = str_var
 
             if i < M:
-                label.grid(row=i, column=0, sticky='e', padx=labelPadding, pady=labelPadding)
-                value.grid(row=i, column=1, sticky='w', padx=labelPadding, pady=labelPadding)
+                label.grid(row=i, column=0, sticky='e', padx=(labelPadding, 0), pady=labelPadding)
+                value.grid(row=i, column=1, sticky='w', padx=(0, labelPadding), pady=labelPadding)
             else:
-                label.grid(row=(i - (M - N)) % N, column=2 * int((i - (M - N)) / N), sticky='e', padx=labelPadding, pady=labelPadding)
-                value.grid(row=(i - (M - N)) % N, column=2 * int((i - (M - N)) / N) + 1, sticky='w', padx=labelPadding, pady=labelPadding)
+                label.grid(row=(i - (M - N)) % N, column=2 * int((i - (M - N)) / N), sticky='e', padx=(labelPadding, 0), pady=labelPadding)
+                value.grid(row=(i - (M - N)) % N, column=2 * int((i - (M - N)) / N) + 1, sticky='w', padx=(0, labelPadding), pady=labelPadding)
 
         updateStatusButton = ttk.Button(statusFrame, command=self.set_status, text='Update Status')
-        updateStatusButton.grid(row=M - 1, column=2, columnspan=6)
+        updateStatusButton.grid(row=M - 1, column=2, columnspan=6, pady=labelPadding)
 
     def init_ui(self):        
         # If the user closes out of the application during a wait_window, no extra windows pop up

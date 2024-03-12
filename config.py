@@ -21,22 +21,8 @@ status_variables.update(press_variables)
 
 # Widget display constants
 userInputWidth = 8
-userInputPadding = 50 #pixels
-loginPadding = 20 #pixels
-setPinsPaddingX = 15 #pixels
-setPinsPaddingY = 3 #pixels
-labelPadding = 10 #pixels
-buttonPadding = 50 #pixels
+labelPadding = 5 #pixels
 framePadding = 15 #pixels
-plotPadding = 30 #pixels
-displaySetTextTime = 1000 # ms
-topLevelWidth = 30
-topLevelWrapLength = 275
-systemStatusFrameWidth = 250
-progressBarLength = 300
-plotTimeLimit = 20 # s
-voltageYLim = 1.2 # kV
-currentYLim = 15 # mA
 
 # Styles
 themename = 'darkly'
