@@ -42,7 +42,7 @@ class ExcimerDetectorApp(ttk.Window):
         ### USER INPUTS SECTION ###
         # There are two columns of user inputs
         userInputFrame = ttk.LabelFrame(self, text='User Inputs', bootstyle='primary')
-        userInputFrame.pack(side='left', padx=framePadding, pady=framePadding)
+        userInputFrame.pack(side='top', padx=framePadding, pady=framePadding)
 
         self.calibration_bool = ttk.BooleanVar()
         self.bias_bool = ttk.BooleanVar()
@@ -52,7 +52,7 @@ class ExcimerDetectorApp(ttk.Window):
         self.bias_toggle_label = ttk.Label(userInputFrame, text='Bias On')
         self.bias_toggle = ttk.Checkbutton(userInputFrame, variable=self.bias_bool, bootstyle='round-toggle')
         self.bias_label = ttk.Label(userInputFrame, text='Bias Voltage (V)')
-        self.bias_entry = ttk.Entry(userInputFrame, width=userInputWidth)
+        self.bias_entry = ttk.Entry(userInputFrame, width=userInputWidth, font=('Helvetica', 12))
         self.setValues_button = ttk.Button(userInputFrame, command=self.setDetectorValues, text='Set Values')
         
         self.calibration_toggle_label.grid(row=0, column=0, sticky='w', padx=labelPadding, pady=labelPadding)
@@ -71,11 +71,11 @@ class ExcimerDetectorApp(ttk.Window):
             self.thresholdEntries[f'threshold_{i + 1}'] = entry
             label.grid(row=i, column=2, sticky='e', padx=labelPadding, pady=labelPadding)
             entry.grid(row=i, column=3, sticky='w', padx=labelPadding, pady=labelPadding)
-            validation.add_range_validation(entry, 2048, 4096, when='focus')
+            validation.add_range_validation(entry, 0, 2047, when='focus')
 
         ### STATUS SECTION ###
         statusFrame = ttk.LabelFrame(self, text='Status', bootstyle='primary')
-        statusFrame.pack(side='left', padx=framePadding, pady=framePadding)
+        statusFrame.pack(side='top', padx=framePadding, pady=framePadding)
 
         self.status_values = {}
         M = len(single_variables)
@@ -95,14 +95,14 @@ class ExcimerDetectorApp(ttk.Window):
         updateStatusButton = ttk.Button(statusFrame, command=self.set_status, text='Update Status')
         updateStatusButton.grid(row=M - 1, column=2, columnspan=6)
 
-    def init_ui(self):
-        # center the app
-        self.center_app()
-        
+    def init_ui(self):        
         # If the user closes out of the application during a wait_window, no extra windows pop up
         self.update()
 
         self.set_status()
+
+        # center the app
+        self.center_app()
 
     def center_app(self):
         self.update_idletasks()
@@ -114,7 +114,7 @@ class ExcimerDetectorApp(ttk.Window):
         win_height = height + titlebar_height + frm_width
         x = self.winfo_screenwidth() // 2 - win_width // 2
         y = self.winfo_screenheight() // 2 - win_height // 2
-        self.geometry(f'+{x}+{0}')
+        self.geometry(f'+{x}+{y}')
         self.deiconify()
 
     def init_visaInstruments(self):
@@ -146,6 +146,8 @@ class ExcimerDetectorApp(ttk.Window):
         # Cancel all scheduled callbacks
         for after_id in self.tk.eval('after info').split():
             self.after_cancel(after_id)
+
+        self.excimerDetectorController.write_command(calibration=False, bias=False, bias_value=0, threshold=[0] * N)
 
         self.quit()
         self.destroy()
