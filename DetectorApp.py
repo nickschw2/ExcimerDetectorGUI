@@ -1,6 +1,9 @@
 import ttkbootstrap as ttk
 from ttkbootstrap import validation
 import numpy as np
+import sys
+import glob
+import serial
 from config import *
 from visa_comms import ExcimerDetectorController
 
@@ -30,6 +33,7 @@ class ExcimerDetectorApp(ttk.Window):
         # Create and show user interface
         self.init_visaInstruments()
         self.configure_ui()
+        self.serial_connect()
         self.init_ui()
 
     def configure_ui(self):
@@ -39,10 +43,25 @@ class ExcimerDetectorApp(ttk.Window):
         # This line of code is customary to quit the application when it is closed
         self.protocol('WM_DELETE_WINDOW', self.on_closing)
 
+        ### VISA CONNECTION SECTION ###
+        connectionFrame = ttk.LabelFrame(self, text='Connection', bootstyle='primary')
+        connectionFrame.grid(row=0, column=0, padx=framePadding, pady=framePadding)
+
+        serial_ports = self.serial_ports()
+        self.comCombobox = ttk.Combobox(connectionFrame, value=serial_ports, state='readonly', bootstyle='primary', **text_opts)
+        self.comCombobox.current(0)
+        self.comCombobox.bind('<<ComboboxSelected>>', self.serial_connect)
+        self.comCombobox.pack(side='top', padx=labelPadding, pady=labelPadding)
+
+        self.connectedString = ttk.StringVar()
+        self.connectedString.set('Not connected')
+        self.connectedLabel = ttk.Label(connectionFrame, textvariable=self.connectedString)
+        self.connectedLabel.pack(side='top', padx=labelPadding, pady=labelPadding)
+
         ### USER INPUTS SECTION ###
         # There are two columns of user inputs
         userInputFrame = ttk.LabelFrame(self, text='User Inputs', bootstyle='primary')
-        userInputFrame.pack(side='top', padx=framePadding, pady=framePadding)
+        userInputFrame.grid(row=0, column=1, padx=framePadding, pady=framePadding)
 
         self.calibration_bool = ttk.BooleanVar()
         self.bias_bool = ttk.BooleanVar()
@@ -75,7 +94,7 @@ class ExcimerDetectorApp(ttk.Window):
 
         ### STATUS SECTION ###
         statusFrame = ttk.LabelFrame(self, text='Status', bootstyle='primary')
-        statusFrame.pack(side='top', padx=framePadding, pady=framePadding)
+        statusFrame.grid(row=1, column=0, columnspan=2, padx=framePadding, pady=framePadding)
 
         self.status_values = {}
         M = len(single_variables)
@@ -99,10 +118,47 @@ class ExcimerDetectorApp(ttk.Window):
         # If the user closes out of the application during a wait_window, no extra windows pop up
         self.update()
 
-        self.set_status()
-
         # center the app
         self.center_app()
+
+    def serial_ports(self):
+        """ Lists serial port names
+
+            :raises EnvironmentError:
+                On unsupported or unknown platforms
+            :returns:
+                A list of the serial ports available on the system
+        """
+        if sys.platform.startswith('win'):
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+            # this excludes your current terminal "/dev/tty"
+            ports = glob.glob('/dev/tty[A-Za-z]*')
+        elif sys.platform.startswith('darwin'):
+            ports = glob.glob('/dev/tty.*')
+        else:
+            raise EnvironmentError('Unsupported platform')
+
+        result = []
+        for port in ports:
+            try:
+                s = serial.Serial(port)
+                s.close()
+                result.append(port)
+            except (OSError, serial.SerialException):
+                pass
+        return result
+    
+    def serial_connect(self, event=None):
+        com = self.comCombobox.get()
+        port = com[3:]
+        connected = self.excimerDetectorController.connectInstrument(port)
+
+        if connected:
+            self.connectedString.set('Connected!')
+            self.set_status()
+        else:
+            self.connectedString.set('Not connected')
 
     def center_app(self):
         self.update_idletasks()
@@ -121,9 +177,13 @@ class ExcimerDetectorApp(ttk.Window):
         self.excimerDetectorController = ExcimerDetectorController()
 
     def set_status(self):
-        self.excimerDetectorController.read_controller()
-        for variable, value in self.status_values.items():
-            value.set(getattr(self.excimerDetectorController, variable))
+        connected = self.excimerDetectorController.read_controller()
+        if connected:
+            self.connectedString.set('Connected!')
+            for variable, value in self.status_values.items():
+                value.set(getattr(self.excimerDetectorController, variable))
+        else:
+            self.connectedString.set('Not connected')
 
     def setDetectorValues(self):
         calibration = self.calibration_bool.get()

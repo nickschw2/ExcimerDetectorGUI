@@ -1,5 +1,3 @@
-COM_PORT = 20
-
 # Maximum number of detectors
 N = 6
 

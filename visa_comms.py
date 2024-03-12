@@ -5,14 +5,16 @@ from config import *
 class ExcimerDetectorController():
     def __init__(self):
         self.rm = pyvisa.ResourceManager()
-        self.connectInstrument()
         print('Excimer detector controller has been initialized successfully.')
 
-    def connectInstrument(self):
-        instrumentName = f'ASRL{COM_PORT}::INSTR'
+    def connectInstrument(self, port):
+        instrumentName = f'ASRL{port}::INSTR'
         self.inst = self.rm.open_resource(instrumentName) # bigger timeout for long mem
+        
+        connected = self.read_controller()
+        return connected
 
-    def read_controller(self, set_values=False):
+    def read_controller(self):
         def data2volts(data):
             return np.array(data).astype(int) * 3.3 / 4095
         def data2temp(data):
@@ -26,8 +28,11 @@ class ExcimerDetectorController():
             return np.round(volts * 100, 1)
         def data2threshold(data):
             return np.array(data).astype(int) - 2048
+        try:
+            status = self.inst.query('1').strip().split(' ')
+        except pyvisa.errors.VisaIOError:
+            return False
 
-        status = self.inst.query('1').strip().split(' ')
         if len(status) != 50:
             status = self.inst.query('1').strip().split(' ')
 
@@ -49,6 +54,8 @@ class ExcimerDetectorController():
             setattr(self, f'temp_{i + 1}', self.detector_temps[i])
             setattr(self, f'press_{i + 1}', self.detector_press[i])
 
+        return True
+
     def write_command(self, calibration=False, bias=True, bias_value=28, threshold=[220]*N):
         if bias_value > 30:
             bias_value = 30
@@ -60,6 +67,3 @@ class ExcimerDetectorController():
         self.inst.write(command)
 
         self.read_controller()
-        threshold_print = '\n'.join([f'Threshold {i}: {val} V' for i, val in enumerate(self.threshold)])
-        # print(f'Calibration: {calibration}\nBias: {bias} at {self.bias_value:.1f} V\n{threshold_print}')
-
