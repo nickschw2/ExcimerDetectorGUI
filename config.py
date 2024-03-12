@@ -12,7 +12,7 @@ single_variables = {'pcb_revision': 'PCB Revision',
 
 threshold_variables = {f'threshold_{i + 1}': f'Threshold {i + 1}' for i in range(N)}
 temp_variables = {f'temp_{i + 1}': f'Temp. Det. {i + 1} (C)' for i in range(N)}
-press_variables = {f'press_{i + 1}': f'Press. Det. {i + 1}' for i in range(N)}
+press_variables = {f'press_{i + 1}': f'Press. Det. {i + 1} (mbar)' for i in range(N)}
 status_variables = dict(single_variables)
 status_variables.update(threshold_variables)
 status_variables.update(temp_variables)

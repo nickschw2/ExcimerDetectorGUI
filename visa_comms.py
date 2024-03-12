@@ -28,6 +28,10 @@ class ExcimerDetectorController():
             return np.round(volts * 100, 1)
         def data2threshold(data):
             return np.array(data).astype(int) - 2048
+        def data2pressure(data):
+            volts = data2volts(data)
+            return np.round((volts / 5.1 + 0.04) * 2500, 1)
+
         try:
             status = self.inst.query('1').strip().split(' ')
         except pyvisa.errors.VisaIOError:
@@ -46,7 +50,7 @@ class ExcimerDetectorController():
         self.bias_current = data2current(status[12])
         self.ref_voltage = np.round(data2volts(status[13]), 1)
         self.detector_temps = data2temp(status[14:20])
-        self.detector_press = status[20:26]
+        self.detector_press = data2pressure(status[20:26])
         self.data = status[26:50]
 
         for i in range(6):
