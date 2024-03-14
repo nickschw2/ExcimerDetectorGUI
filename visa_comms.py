@@ -35,7 +35,7 @@ class ExcimerDetectorController():
             volts = data2volts(data)
             return np.round(volts * 100, 1)
         def data2threshold(data):
-            return np.array(data).astype(int) - 2048
+            return np.array(data).astype(int) - 1508
         def data2pressure(data):
             volts = data2volts(data)
             return np.round((volts / 5.1 + 0.04) * 2500, 1)
@@ -77,7 +77,7 @@ class ExcimerDetectorController():
             print('Cannot exceed bias voltage of more than 30 V')
 
         bias_value_digital = int(bias_value * 67.41)
-        threshold_digital = [str(int(val + 2048)) for val in threshold]
+        threshold_digital = [str(int(val + 1508)) for val in threshold]
         command = f'0 {int(calibration)} {int(bias)} {bias_value_digital} {" ".join(threshold_digital)}\r'
         self.inst.write(command)
 

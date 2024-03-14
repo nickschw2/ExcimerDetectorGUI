@@ -222,7 +222,7 @@ class ExcimerDetectorApp(ttk.Window):
         for after_id in self.tk.eval('after info').split():
             self.after_cancel(after_id)
 
-        # If detector is connected, reset it back to default
+        # If detector is connected, reset it back to default before closing
         if hasattr(self.excimerDetectorController, 'inst'):
             self.excimerDetectorController.write_command(calibration=False, bias=False, bias_value=0, threshold=[0] * N)
 
