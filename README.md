@@ -1,0 +1,5 @@
+This is a tkinter and python-based graphical user interface for operating the [noble gas excimer-based detector]([url](https://pubs.aip.org/aip/jap/article/115/14/144504/932467/Noble-gas-excimer-scintillation-following-neutron)https://pubs.aip.org/aip/jap/article/115/14/144504/932467/Noble-gas-excimer-scintillation-following-neutron). The code currently does not record counts in real time, as that is done by another, gated data acquisition system. Every other aspect of the detector can be read/written by this software. At the moment it has only been tested on Windows, and the serial connection would require a bit more work to test on Linux or Mac.
+
+There are two methods of running the code. The first is through an executable file `DetectorApp.exe`, and it is useful for quickly running the program on a computer without needing to install python or any packages. The second method is by running the actual python code `DetectorApp.py` and this allows for development.
+
+To install, simply run `pip install -r requirements.txt` to install the required python packages.
