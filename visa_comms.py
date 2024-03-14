@@ -4,17 +4,25 @@ from config import *
 
 class ExcimerDetectorController():
     def __init__(self):
+        # Initialize visa resource manager
         self.rm = pyvisa.ResourceManager()
-        print('Excimer detector controller has been initialized successfully.')
 
+    # Given a port number, connect to instrument using pyvisa
     def connectInstrument(self, port):
         instrumentName = f'ASRL{port}::INSTR'
-        self.inst = self.rm.open_resource(instrumentName) # bigger timeout for long mem
+        try:
+            self.inst = self.rm.open_resource(instrumentName) # default values of baud rate, parity, etc are okay, but can change them here
+        except pyvisa.errors.VisaIOError:
+            return False
         
         connected = self.read_controller()
+        if connected:
+            print('Excimer detector controller has been initialized successfully.')
+
         return connected
 
     def read_controller(self):
+        # Formulae for converting to meaningful numbers
         def data2volts(data):
             return np.array(data).astype(int) * 3.3 / 4095
         def data2temp(data):
@@ -37,6 +45,7 @@ class ExcimerDetectorController():
         except pyvisa.errors.VisaIOError:
             return False
 
+        # Sometimes after a write, the length of status is just for the write values, so just run query again
         if len(status) != 50:
             status = self.inst.query('1').strip().split(' ')
 
@@ -53,6 +62,7 @@ class ExcimerDetectorController():
         self.detector_press = data2pressure(status[20:26])
         self.data = status[26:50]
 
+        # Set variables
         for i in range(6):
             setattr(self, f'threshold_{i + 1}', self.threshold[i])
             setattr(self, f'temp_{i + 1}', self.detector_temps[i])
@@ -60,6 +70,7 @@ class ExcimerDetectorController():
 
         return True
 
+    # Write command based off firmware
     def write_command(self, calibration=False, bias=True, bias_value=28, threshold=[220]*N):
         if bias_value > 30:
             bias_value = 30

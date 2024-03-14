@@ -7,9 +7,10 @@ import serial
 from config import *
 from visa_comms import ExcimerDetectorController
 
-
+# Main app
 class ExcimerDetectorApp(ttk.Window):
     def __init__(self):
+        # Define style of app
         super().__init__(themename=themename)
         style = ttk.Style()
         self.colors = style.colors
@@ -52,18 +53,19 @@ class ExcimerDetectorApp(ttk.Window):
             self.print('No serial devices detected')
             self.on_closing()
 
+        # Create a combobox for choosing the com port
         self.comCombobox = ttk.Combobox(connectionFrame, value=serial_ports, state='readonly', bootstyle='primary', **text_opts)
         self.comCombobox.current(0)
         self.comCombobox.bind('<<ComboboxSelected>>', self.serial_connect)
         self.comCombobox.pack(side='top', padx=labelPadding, pady=labelPadding)
 
+        # Label to tell user whether detector is connected
         self.connectedString = ttk.StringVar()
         self.connectedString.set('Not connected')
         self.connectedLabel = ttk.Label(connectionFrame, textvariable=self.connectedString)
         self.connectedLabel.pack(side='top', padx=labelPadding, pady=labelPadding)
 
         ### USER INPUTS SECTION ###
-        # There are two columns of user inputs
         userInputFrame = ttk.LabelFrame(self, text='User Inputs', bootstyle='primary')
         userInputFrame.grid(row=0, column=1, padx=framePadding, pady=framePadding)
 
@@ -86,6 +88,7 @@ class ExcimerDetectorApp(ttk.Window):
         self.bias_entry.grid(row=2, column=1, sticky='w', padx=labelPadding, pady=labelPadding)
         self.setValues_button.grid(row=5, column=0, sticky='w', padx=labelPadding, pady=labelPadding)
 
+        # Create threshold entries
         self.thresholdEntries = {}
         for i in range(N):
             label = ttk.Label(userInputFrame, text=f'Threshold Val {i + 1}')
@@ -100,6 +103,8 @@ class ExcimerDetectorApp(ttk.Window):
         statusFrame = ttk.LabelFrame(self, text='Status', bootstyle='primary')
         statusFrame.grid(row=1, column=0, columnspan=2, padx=framePadding, pady=framePadding)
 
+        # I separated status variables into those that only exist for a controller and those that
+        # have values for all N detectors
         self.status_values = {}
         M = len(single_variables)
         for i, (variable, name) in enumerate(status_variables.items()):
@@ -154,16 +159,19 @@ class ExcimerDetectorApp(ttk.Window):
         return result
     
     def serial_connect(self, event=None):
+        # Get the value of the COM port from the combobox and extract just the number at the end
         com = self.comCombobox.get()
         port = com[3:]
         connected = self.excimerDetectorController.connectInstrument(port)
 
+        # If connected, set the status of the controller
         if connected:
             self.connectedString.set('Connected!')
             self.set_status()
         else:
             self.connectedString.set('Not connected')
 
+    # Some geometry to center the app on the screen
     def center_app(self):
         self.update_idletasks()
         width = self.winfo_width()
@@ -177,9 +185,11 @@ class ExcimerDetectorApp(ttk.Window):
         self.geometry(f'+{x}+{y}')
         self.deiconify()
 
+    # Initialize the controller
     def init_visaInstruments(self):
         self.excimerDetectorController = ExcimerDetectorController()
 
+    # Set the value for all status variables
     def set_status(self):
         connected = self.excimerDetectorController.read_controller()
         if connected:
@@ -188,7 +198,8 @@ class ExcimerDetectorApp(ttk.Window):
                 value.set(getattr(self.excimerDetectorController, variable))
         else:
             self.connectedString.set('Not connected')
-
+    
+    # Read user inputs and write command to controller
     def setDetectorValues(self):
         calibration = self.calibration_bool.get()
         bias = self.bias_bool.get()
@@ -211,11 +222,14 @@ class ExcimerDetectorApp(ttk.Window):
         for after_id in self.tk.eval('after info').split():
             self.after_cancel(after_id)
 
-        self.excimerDetectorController.write_command(calibration=False, bias=False, bias_value=0, threshold=[0] * N)
+        # If detector is connected, reset it back to default
+        if hasattr(self.excimerDetectorController, 'inst'):
+            self.excimerDetectorController.write_command(calibration=False, bias=False, bias_value=0, threshold=[0] * N)
 
         self.quit()
         self.destroy()
 
+# Loop that actually runs the code
 if __name__ == "__main__":
     app = ExcimerDetectorApp()
     app.mainloop()
