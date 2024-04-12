@@ -50,7 +50,7 @@ class ExcimerDetectorApp(ttk.Window):
 
         serial_ports = self.serial_ports()
         if len(serial_ports) == 0:
-            self.print('No serial devices detected')
+            print('No serial devices detected')
             self.on_closing()
 
         # Create a combobox for choosing the com port

@@ -5,7 +5,7 @@ from config import *
 class ExcimerDetectorController():
     def __init__(self):
         # Initialize visa resource manager
-        self.rm = pyvisa.ResourceManager()
+        self.rm = pyvisa.ResourceManager('@py')
 
     # Given a port number, connect to instrument using pyvisa
     def connectInstrument(self, port):
